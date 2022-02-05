@@ -3,8 +3,9 @@ name: deploy React App To GKE
 on:
   workflow-run:
     workflows: ["Frontend unit tests"]
-    banches: master
-    types: completed
+    banches: [master]
+    types: 
+      - completed
   
 env:
   PROJECT_ID: ${{ secrets.GKE_PROJECT}}
@@ -40,7 +41,7 @@ jobs:
         docker push cooky1/multi-worker:${{steps.vars.outputs.tag}}
 
   setup-and-deploy:
-    needs: publish-to-hub
+    needs: build
     name: Setup and Deploy to k8s
     runs-on: ubuntu-latest
 
