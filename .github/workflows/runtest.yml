@@ -1,0 +1,16 @@
+name: Frontend unit tests
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build dockerfile
+        run: docker build -t cooky1/react-test -f ./client/Dockerfile.dev ./client
+      - name: run test
+        run: docker run -e CI=true cooky1/react-test npm test -- --coverage

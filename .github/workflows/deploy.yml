@@ -1,0 +1,74 @@
+name: eploy React App To GKE
+
+on:
+  workflow-run:
+    workflows: Frontend unit tests
+    banches: master
+    type: completed
+  
+
+env:
+  PROJECT_ID: ${{ secrets.GKE_PROJECT}}
+  GKE_CLUSTER: multi-cluster
+  GKE_ZONE: europe_west1-b
+  SHA: ${ GITHUB_SHA:10 }
+
+
+jobs:
+  publish-to-hub:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    name: Publish to dockerhub
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v2
+      - name: Login to Docker Hub
+        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Get the version
+      id: vars
+      run: echo ::set-output name=tag::$(echo ${GITHUB_SHA:10})
+
+    - name: Running deploy script
+      run: |-
+        docker build -t cooky1/multi-client:latest -t cooky1/multi-client:${{steps.vars.outputs.tag}} -f ./client/Dockerfile ./client
+        docker build -t cooky1/multi-server:latest -t cooky1/multi-server:${{steps.vars.outputs.tag}} -f ./server/Dockerfile ./server
+        docker build -t cooky1/multi-worker:latest -t cooky1/multi-worker:${{steps.vars.outputs.tag}} -f ./worker/Dockerfile ./worker
+        docker push cooky1/multi-client:latest
+        docker push cooky1/multi-server:latest
+        docker push cooky1/multi-worker:latest
+        docker push cooky1/multi-client:${{steps.vars.outputs.tag}}
+        docker push cooky1/multi-server:${{steps.vars.outputs.tag}}
+        docker push cooky1/multi-worker:${{steps.vars.outputs.tag}}
+
+  setup-and-deploy:
+    needs: publish-to-hub
+    name: Setup and Deploy to k8s
+    runs-on: ubuntu-latest
+
+    steps:
+      - neme: checkout
+      - uses: actions/checkout@v2
+
+    # Setup gcloud CLI
+    - uses: google-github-actions/setup-gcloud@master
+      with:
+        service_account_key: ${{ secrets.GKE_SA_KEY }}
+        project_id: ${{ secrets.GKE_PROJECT }}
+
+    # Get the GKE credentials so we can deploy to the cluster
+    - run: |-
+        gcloud container clusters get-credentials "$GKE_CLUSTER" --zone "$GKE_ZONE"
+
+    # Deploy sample image to the GKE cluster
+    - name: Get the version
+      id: vars
+      run: echo ::set-output name=tag::$(echo ${GITHUB_SHA:10})
+
+    - name: Deploy
+      run: |-
+        kubectl apply -f k8s/
+        kubectl set image deployments/server-deployment server=cooky1/multi-server:${{steps.vars.outputs.tag}}
+        kubectl set image deployments/client-deployment client=cooky1/multi-client:${{steps.vars.outputs.tag}}
+        kubectl set image deployments/worker-deployment worker=cooky1/multi-worker:${{steps.vars.outputs.tag}}
+        kubectl get services -o wide
