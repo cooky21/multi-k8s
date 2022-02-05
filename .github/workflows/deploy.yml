@@ -1,9 +1,9 @@
-name: eploy React App To GKE
+name: deploy React App To GKE
 
 on:
   workflow-run:
-    workflows: Frontend unit tests
-    banches: [master]
+    workflows: ["Frontend unit tests"]
+    banches: master
     types: completed
   
 env:
