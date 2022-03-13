@@ -14,6 +14,7 @@ env:
   SHA: ${ GITHUB_SHA:10 }
 
 jobs:
+  # publish the images to dokerhub
   publish-to-hub:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     name: Publish to dockerhub
@@ -39,7 +40,8 @@ jobs:
           docker push cooky1/multi-client:${{steps.vars.outputs.tag}}
           docker push cooky1/multi-server:${{steps.vars.outputs.tag}}
           docker push cooky1/multi-worker:${{steps.vars.outputs.tag}}
-
+  
+  # deploy to GKE
   setup-and-deploy:
     needs: publish-to-hub
     name: Setup and Deploy to k8s
