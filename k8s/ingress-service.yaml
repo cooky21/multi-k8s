@@ -13,7 +13,7 @@ spec:
     - host:
       - fibonacci.d-aim.io
       - www.fibonacci.d-aim.io
-      secretName: wildcard-d-aim-io
+      secretName: feb-d-aim-io
   rules:
     - host: fibonacci.d-aim.io
       http:
