@@ -3,7 +3,7 @@ kind: Certificate
 metadata:
   name: d-aim-io-tls
 spec:
-  secretName: wildcard-d-aim-io
+  secretName: fib-d-aim-io
   issuerRef:
     name: letsencrypt-prod
     kind: ClusterIssuer
