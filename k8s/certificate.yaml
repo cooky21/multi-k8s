@@ -10,4 +10,3 @@ spec:
   commonName: fibonacci.d-aim.io
   dnsNames:
     - fibonacci.d-aim.io
-    - www.fibonacci.d-aim.io

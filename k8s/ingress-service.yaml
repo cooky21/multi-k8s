@@ -12,7 +12,6 @@ spec:
   tls:
   - hosts:
     - fibonacci.d-aim.io
-    - www.fibonacci.d-aim.io
     secretName: d-aim-io-tls-l2hx2
   rules:
   - host: fibonacci.d-aim.io
